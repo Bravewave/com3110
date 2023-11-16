@@ -69,17 +69,19 @@ class Retrieve:
     def for_query(self, query):
         match self.term_weighting:
             case "binary":
-                docs = self.relevant_docs(query)
+                relevant = self.relevant_docs(query)
                 hits = set()
-                for doc in docs.values():
+                for doc in relevant.values():
                     hits.update(doc.keys())
                 return list(hits)
             case "tf":
-                docs = self.relevant_docs(query)
-                print(docs)
-                return list(range(1, 11))
+                relevant = self.relevant_docs(query)
+                sorted_docids = None
+                for _, docs in relevant.items():
+                    sorted_docids = dict(sorted(docs.items(), key=lambda x: x[1], reverse=True)).keys()
+                return list(sorted_docids)
             case "tfidf":
-                reldocs = self.relevant_docs(query)
+                docs = self.relevant_docs(query)
                 return list(range(1, 11))
             case _:
                 # Due to the command line input validation in IR_engine.py, this case should theoretically never
@@ -89,12 +91,12 @@ class Retrieve:
 
 QUERY = ['what', 'articles', 'exist', 'which', 'deal', 'with', 'tss', 'time', 'sharing', 'system', 'an', 'operating', 'system', 'for', 'ibm', 'computers']
 
-with open('IR_data.pickle', 'rb') as data_in:
-    all_data = pickle.load(data_in)
-choice = 'index_stoplist_no_stemming_no'
-index = all_data[choice]
-
-choice = 'queries_stoplist_no_stemming_no'
-queries = all_data[choice]
-
-print(Retrieve(index, "binary").idf("december"))
+# with open('IR_data.pickle', 'rb') as data_in:
+#     all_data = pickle.load(data_in)
+# choice = 'index_stoplist_no_stemming_no'
+# index = all_data[choice]
+#
+# choice = 'queries_stoplist_no_stemming_no'
+# queries = all_data[choice]
+#
+# print(Retrieve(index, "tf"))
