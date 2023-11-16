@@ -67,7 +67,6 @@ class Retrieve:
         match self.term_weighting:
             case "binary":
                 docs = self.relevant_docs(query)
-                print(docs)
                 hits = set()
                 for word in docs.values():
                     hits.update(word.keys())
