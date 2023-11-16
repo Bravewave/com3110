@@ -30,6 +30,9 @@ class Retrieve:
             self.doc_ids.update(self.index[term])
         return len(self.doc_ids)
 
+    def idf(self, word: str) -> float:
+        return self.compute_number_of_documents() / len(index[word])
+
     def relevant_docs(self, query: list[str]) -> dict[str, dict[int, int]]:
         """
         Returns a dictionary mapping the words in a query to documents which contain them
@@ -68,10 +71,12 @@ class Retrieve:
             case "binary":
                 docs = self.relevant_docs(query)
                 hits = set()
-                for word in docs.values():
-                    hits.update(word.keys())
+                for doc in docs.values():
+                    hits.update(doc.keys())
                 return list(hits)
             case "tf":
+                docs = self.relevant_docs(query)
+                print(docs)
                 return list(range(1, 11))
             case "tfidf":
                 reldocs = self.relevant_docs(query)
@@ -82,7 +87,7 @@ class Retrieve:
                 raise Exception("Invalid Weighting - use either 'binary', 'tf' or 'tfidf'")
 
 
-QUERY = (1, ['what', 'articles', 'exist', 'which', 'deal', 'with', 'tss', 'time', 'sharing', 'system', 'an', 'operating', 'system', 'for', 'ibm', 'computers'])
+QUERY = ['what', 'articles', 'exist', 'which', 'deal', 'with', 'tss', 'time', 'sharing', 'system', 'an', 'operating', 'system', 'for', 'ibm', 'computers']
 
 with open('IR_data.pickle', 'rb') as data_in:
     all_data = pickle.load(data_in)
@@ -92,4 +97,4 @@ index = all_data[choice]
 choice = 'queries_stoplist_no_stemming_no'
 queries = all_data[choice]
 
-# print(Retrieve(index, "binary").relevant_docs(QUERY))
+print(Retrieve(index, "binary").idf("december"))
