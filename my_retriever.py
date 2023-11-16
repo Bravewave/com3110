@@ -30,7 +30,7 @@ class Retrieve:
             self.doc_ids.update(self.index[term])
         return len(self.doc_ids)
 
-    def relevant_docs(self, query: tuple[int, list[str]]) -> dict[str, dict[int, int]]:
+    def relevant_docs(self, query: list[str]) -> dict[str, dict[int, int]]:
         """
         Returns a dictionary mapping the words in a query to documents which contain them
         :param query: the query to be processed
@@ -38,13 +38,13 @@ class Retrieve:
         occurs within them
         """
         d_dict = dict()
-        for word in query[1]:
+        for word in query:
             if word in self.index:
                 d_dict.update({word: self.index[word]})
 
         return d_dict
 
-    def vectorise_query(self, query: tuple[int, list[str]]) -> list[int]:
+    def vectorise_query(self, query: list[str]) -> list[int]:
         """
         Turns a list of query terms into an array of how many times each term appears in that query
         :param query: a tuple consisting of the query id and a list of query terms
@@ -52,7 +52,7 @@ class Retrieve:
         """
         q_dict = dict()
 
-        for word in query[1]:
+        for word in query:
             if word in q_dict:
                 q_dict[word] += 1
             else:
@@ -66,7 +66,12 @@ class Retrieve:
     def for_query(self, query):
         match self.term_weighting:
             case "binary":
-                return list(range(1, 11))
+                docs = self.relevant_docs(query)
+                print(docs)
+                hits = set()
+                for word in docs.values():
+                    hits.update(word.keys())
+                return list(hits)
             case "tf":
                 return list(range(1, 11))
             case "tfidf":
@@ -88,4 +93,4 @@ index = all_data[choice]
 choice = 'queries_stoplist_no_stemming_no'
 queries = all_data[choice]
 
-print(Retrieve(index, "binary").relevant_docs(QUERY))
+# print(Retrieve(index, "binary").relevant_docs(QUERY))
