@@ -1,5 +1,4 @@
 from math import sqrt
-import pickle
 
 
 def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
@@ -31,7 +30,7 @@ class Retrieve:
         return len(self.doc_ids)
 
     def idf(self, word: str) -> float:
-        return self.compute_number_of_documents() / len(index[word])
+        return self.compute_number_of_documents() / len(self.index[word])
 
     def relevant_docs(self, query: list[str]) -> dict[str, dict[int, int]]:
         """

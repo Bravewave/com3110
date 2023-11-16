@@ -121,7 +121,7 @@ if __name__ == '__main__':
     retrieve = Retrieve(config.index, config.term_weighting)
     all_results = ResultStore()
 
-    for (qid, query) in queries[:10]:
+    for (qid, query) in queries:
         results = retrieve.for_query(query)
         all_results.store(qid, results)
 
