@@ -55,17 +55,11 @@ def vectorise_query(query: list[str], weighting: str) -> list:
     return list(q_dict.values())
 
 
-def vectorise_document(docs: dict[str, dict[int, int]], query: list[str], weighting: str) -> list:
+def vectorise_document(docs: dict[str, dict[int, int]], weighting: str) -> list:
     d_dict = dict()
     match weighting:
         case "binary":
-            for word in query:
-                if word in docs:
-                    if word in d_dict:
-                        continue
-                    else:
-                        for doc, count in docs[word].items():
-                            d_dict.update({word: 1})
+
 
         case "tf":
             return
@@ -106,10 +100,6 @@ class Retrieve:
 
         return d_dict
 
-    # def create_matrix(self, query):
-    #     document_matrix = dict()
-    #     for i in range(0, len(query)):
-
     # Method performing retrieval for a single query (which is
     # represented as a list of preprocessed terms). ​Returns list
     # of doc ids for relevant docs (in rank order).
@@ -117,8 +107,7 @@ class Retrieve:
     def for_query(self, query):
         q_vec = vectorise_query(query, self.term_weighting)
         relevant = self.relevant_docs(query)
-        for doclist in relevant.items():
-            print(doclist)
+        print(relevant)
         match self.term_weighting:
             case "binary":
                 hits = set()
@@ -134,16 +123,3 @@ class Retrieve:
                 # Due to the command line input validation in IR_engine.py, this case should theoretically never
                 # actually run, but is here just in case
                 raise Exception("Invalid Weighting - use either 'binary', 'tf' or 'tfidf'")
-
-
-QUERY = ['what', 'articles', 'exist', 'which', 'deal', 'with', 'tss', 'time', 'sharing', 'system', 'an', 'operating', 'system', 'for', 'ibm', 'computers']
-
-# with open('IR_data.pickle', 'rb') as data_in:
-#     all_data = pickle.load(data_in)
-# choice = 'index_stoplist_no_stemming_no'
-# index = all_data[choice]
-#
-# choice = 'queries_stoplist_no_stemming_no'
-# queries = all_data[choice]
-#
-# print(Retrieve(index, "tf"))
