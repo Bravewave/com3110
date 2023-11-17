@@ -106,7 +106,6 @@ class Retrieve:
                 for term, doclist in docs.items():
                     for docid in doclist.keys():
                         d_dict.update({docid: None})
-
             case "tf":
                 print(2)
             case "tfidf":
@@ -124,7 +123,7 @@ class Retrieve:
         q_vec = self.vectorise_query(query, self.term_weighting)
         print("QVector: ", q_vec)
         d_vecs = self.vectorise_docs(relevant, self.term_weighting)
-        print("DVector: ", d_vecs)
+        print("DVectors: ", d_vecs)
         match self.term_weighting:
             case "binary":
                 hits = set()
