@@ -21,27 +21,6 @@ def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
     return sum(x * y for x, y in zip(vq, vd)) / sqrt(sum(y ** 2 for y in vd))
 
 
-# def vectorise_query(query, weighting):
-#     q_dict = dict()
-#     match weighting:
-#         case "binary":
-#             for word in query:
-#                 if word in q_dict:
-#                     continue
-#                 else:
-#                     q_dict.update({word: 1})
-#         case "tf":
-#             for word in query:
-#                 if word in q_dict:
-#                     q_dict[word] += 1
-#                 else:
-#                     q_dict.update({word: 1})
-#         case "tfidf":
-#             q_dict = {}
-#
-#     return q_dict
-#
-#
 # def vectorise_documents(docs: dict[str, dict[int, int]], q_vector, weighting: str):
 #     d_dict = dict()
 #     match weighting:
@@ -91,9 +70,8 @@ class Retrieve:
 
         return d_dict
 
-    def vectorise(self, docs, query, weighting):
+    def vectorise_query(self, query, weighting):
         q_dict = {}
-        d_dict = {}
 
         match weighting:
             case "binary":
@@ -117,11 +95,24 @@ class Retrieve:
 
                 for term, tf in q_dict.items():
                     q_dict[term] = tf * self.idf(term)
-            case _:
-                raise Exception("nuh uh")
 
-        print("Vector: ", q_dict)
-        return 1
+        return q_dict
+
+    def vectorise_docs(self, docs, weighting):
+        d_dict = {}
+
+        match weighting:
+            case "binary":
+                for term, doclist in docs.items():
+                    for docid in doclist.keys():
+                        d_dict.update({docid: None})
+
+            case "tf":
+                print(2)
+            case "tfidf":
+                print(3)
+
+        return d_dict
 
     # Method performing retrieval for a single query (which is
     # represented as a list of preprocessed terms). ​Returns list
@@ -130,11 +121,10 @@ class Retrieve:
     def for_query(self, query):
         relevant = self.relevant_docs(query)
         print("Relevant: ", relevant)
-        vectors = self.vectorise(relevant, query, self.term_weighting)
-        # print("Vector: ", vectors)
-        # q_vec = vectorise_query(query, self.term_weighting)
-        # print(q_vec)
-        # print(vectorise_documents(relevant, q_vec, self.term_weighting))
+        q_vec = self.vectorise_query(query, self.term_weighting)
+        print("QVector: ", q_vec)
+        d_vecs = self.vectorise_docs(relevant, self.term_weighting)
+        print("DVector: ", d_vecs)
         match self.term_weighting:
             case "binary":
                 hits = set()
