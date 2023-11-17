@@ -4,7 +4,7 @@ November 2023
 Kiran Da Costa
 """
 
-from math import sqrt
+from math import sqrt, log
 
 
 def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
@@ -21,52 +21,43 @@ def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
     return sum(x * y for x, y in zip(vq, vd)) / sqrt(sum(y ** 2 for y in vd))
 
 
-def tf(docset):
-    sorted_docids = None
-    for _, docs in docset.items():
-        sorted_docids = dict(sorted(docs.items(), key=lambda x: x[1], reverse=True)).keys()
-
-    return sorted_docids
-
-
-def vectorise_query(query: list[str], weighting: str) -> list:
-    """
-    Turns a list of query terms into an array of how many times each term appears in that query
-    :param query: a tuple consisting of the query id and a list of query terms
-    :param weighting: the weighting applied to the search terms
-    :return: a list of integers representing the frequency of each query term within the query
-    """
-    q_dict = dict()
-    if weighting == "binary":
-        for word in query:
-            if word in q_dict:
-                continue
-            else:
-                q_dict.update({word: 1})
-    elif weighting == "tf":
-        for word in query:
-            if word in q_dict:
-                q_dict[word] += 1
-            else:
-                q_dict.update({word: 1})
-    elif weighting == "tfidf":
-        q_dict = {}
-
-    return list(q_dict.values())
-
-
-def vectorise_document(docs: dict[str, dict[int, int]], weighting: str) -> list:
-    d_dict = dict()
-    match weighting:
-        case "binary":
-
-
-        case "tf":
-            return
-        case "tfidf":
-            return
-
-    return list(d_dict.values())
+# def vectorise_query(query, weighting):
+#     q_dict = dict()
+#     match weighting:
+#         case "binary":
+#             for word in query:
+#                 if word in q_dict:
+#                     continue
+#                 else:
+#                     q_dict.update({word: 1})
+#         case "tf":
+#             for word in query:
+#                 if word in q_dict:
+#                     q_dict[word] += 1
+#                 else:
+#                     q_dict.update({word: 1})
+#         case "tfidf":
+#             q_dict = {}
+#
+#     return q_dict
+#
+#
+# def vectorise_documents(docs: dict[str, dict[int, int]], q_vector, weighting: str):
+#     d_dict = dict()
+#     match weighting:
+#         case "binary":
+#             for term, doclist in docs.items():
+#                 for docid in doclist.keys():
+#                     if docid in doclist:
+#                         d_dict.update({docid: term})
+#
+#             return d_dict
+#         case "tf":
+#             return [[1, 2]]
+#         case "tfidf":
+#             return [[1, 3]]
+#
+#     return list(d_dict.values())
 
 
 class Retrieve:
@@ -84,7 +75,7 @@ class Retrieve:
         return len(self.doc_ids)
 
     def idf(self, word: str) -> float:
-        return self.compute_number_of_documents() / len(self.index[word])
+        return log(self.compute_number_of_documents() / len(self.index[word]))
 
     def relevant_docs(self, query: list[str]) -> dict[str, dict[int, int]]:
         """
@@ -100,14 +91,50 @@ class Retrieve:
 
         return d_dict
 
+    def vectorise(self, docs, query, weighting):
+        q_dict = {}
+        d_dict = {}
+
+        match weighting:
+            case "binary":
+                for term in query:
+                    if term in q_dict:
+                        continue
+                    else:
+                        q_dict.update({term: 1})
+            case "tf":
+                for term in query:
+                    if term in q_dict:
+                        q_dict[term] += 1
+                    else:
+                        q_dict.update({term: 1})
+            case "tfidf":
+                for term in query:
+                    if term in q_dict:
+                        q_dict[term] += 1
+                    else:
+                        q_dict.update({term: 1})
+
+                for term, tf in q_dict.items():
+                    q_dict[term] = tf * self.idf(term)
+            case _:
+                raise Exception("nuh uh")
+
+        print("Vector: ", q_dict)
+        return 1
+
     # Method performing retrieval for a single query (which is
     # represented as a list of preprocessed terms). ​Returns list
     # of doc ids for relevant docs (in rank order).
 
     def for_query(self, query):
-        q_vec = vectorise_query(query, self.term_weighting)
         relevant = self.relevant_docs(query)
-        print(relevant)
+        print("Relevant: ", relevant)
+        vectors = self.vectorise(relevant, query, self.term_weighting)
+        # print("Vector: ", vectors)
+        # q_vec = vectorise_query(query, self.term_weighting)
+        # print(q_vec)
+        # print(vectorise_documents(relevant, q_vec, self.term_weighting))
         match self.term_weighting:
             case "binary":
                 hits = set()
@@ -115,8 +142,7 @@ class Retrieve:
                     hits.update(doclist.keys())
                 return list(hits)
             case "tf":
-                print(q_vec)
-                return list(tf(relevant))
+                return list(range(1, 11))
             case "tfidf":
                 return list(range(1, 11))
             case _:
