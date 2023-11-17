@@ -1,3 +1,9 @@
+"""
+COM3110 Text Processing Information Retrieval Assignment
+November 2023
+Kiran Da Costa
+"""
+
 from math import sqrt
 
 
@@ -13,6 +19,60 @@ def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
 
     # Calculate the dot product using zip(), then divide by the magnitude of document vector
     return sum(x * y for x, y in zip(vq, vd)) / sqrt(sum(y ** 2 for y in vd))
+
+
+def tf(docset):
+    sorted_docids = None
+    for _, docs in docset.items():
+        sorted_docids = dict(sorted(docs.items(), key=lambda x: x[1], reverse=True)).keys()
+
+    return sorted_docids
+
+
+def vectorise_query(query: list[str], weighting: str) -> list:
+    """
+    Turns a list of query terms into an array of how many times each term appears in that query
+    :param query: a tuple consisting of the query id and a list of query terms
+    :param weighting: the weighting applied to the search terms
+    :return: a list of integers representing the frequency of each query term within the query
+    """
+    q_dict = dict()
+    if weighting == "binary":
+        for word in query:
+            if word in q_dict:
+                continue
+            else:
+                q_dict.update({word: 1})
+    elif weighting == "tf":
+        for word in query:
+            if word in q_dict:
+                q_dict[word] += 1
+            else:
+                q_dict.update({word: 1})
+    elif weighting == "tfidf":
+        q_dict = {}
+
+    return list(q_dict.values())
+
+
+def vectorise_document(docs: dict[str, dict[int, int]], query: list[str], weighting: str) -> list:
+    d_dict = dict()
+    match weighting:
+        case "binary":
+            for word in query:
+                if word in docs:
+                    if word in d_dict:
+                        continue
+                    else:
+                        for doc, count in docs[word].items():
+                            d_dict.update({word: 1})
+
+        case "tf":
+            return
+        case "tfidf":
+            return
+
+    return list(d_dict.values())
 
 
 class Retrieve:
@@ -46,41 +106,29 @@ class Retrieve:
 
         return d_dict
 
-    def vectorise_query(self, query: list[str]) -> list[int]:
-        """
-        Turns a list of query terms into an array of how many times each term appears in that query
-        :param query: a tuple consisting of the query id and a list of query terms
-        :return: a list of integers representing the frequency of each query term within the query
-        """
-        q_dict = dict()
-
-        for word in query:
-            if word in q_dict:
-                q_dict[word] += 1
-            else:
-                q_dict.update({word: 1})
-
-        return list(q_dict.values())
+    # def create_matrix(self, query):
+    #     document_matrix = dict()
+    #     for i in range(0, len(query)):
 
     # Method performing retrieval for a single query (which is
     # represented as a list of preprocessed terms). ​Returns list
     # of doc ids for relevant docs (in rank order).
+
     def for_query(self, query):
+        q_vec = vectorise_query(query, self.term_weighting)
+        relevant = self.relevant_docs(query)
+        for doclist in relevant.items():
+            print(doclist)
         match self.term_weighting:
             case "binary":
-                relevant = self.relevant_docs(query)
                 hits = set()
-                for doc in relevant.values():
-                    hits.update(doc.keys())
+                for word, doclist in relevant.items():
+                    hits.update(doclist.keys())
                 return list(hits)
             case "tf":
-                relevant = self.relevant_docs(query)
-                sorted_docids = None
-                for _, docs in relevant.items():
-                    sorted_docids = dict(sorted(docs.items(), key=lambda x: x[1], reverse=True)).keys()
-                return list(sorted_docids)
+                print(q_vec)
+                return list(tf(relevant))
             case "tfidf":
-                docs = self.relevant_docs(query)
                 return list(range(1, 11))
             case _:
                 # Due to the command line input validation in IR_engine.py, this case should theoretically never
