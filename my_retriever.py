@@ -52,7 +52,7 @@ class Retrieve:
 
         return d_dict
 
-    def vectorise_query(self, query, weighting):
+    def vectorise_query(self, query: list[str], weighting: str):
         q_dict = dict()
 
         match weighting:
@@ -80,7 +80,7 @@ class Retrieve:
 
         return q_dict
 
-    def vectorise_docs(self, index, weighting):
+    def vectorise_docs(self, index: dict[str, dict[int, int]], weighting: str):
         d_dict = dict()
         idf_dict = dict()
 
