@@ -21,24 +21,6 @@ def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
     return sum(x * y for x, y in zip(vq, vd)) / sqrt(sum(y ** 2 for y in vd))
 
 
-# def vectorise_documents(docs: dict[str, dict[int, int]], q_vector, weighting: str):
-#     d_dict = dict()
-#     match weighting:
-#         case "binary":
-#             for term, doclist in docs.items():
-#                 for docid in doclist.keys():
-#                     if docid in doclist:
-#                         d_dict.update({docid: term})
-#
-#             return d_dict
-#         case "tf":
-#             return [[1, 2]]
-#         case "tfidf":
-#             return [[1, 3]]
-#
-#     return list(d_dict.values())
-
-
 class Retrieve:
     # Create new Retrieve object storing index and term weighting 
     # scheme. ​(You can extend this method, as required.)
@@ -98,18 +80,42 @@ class Retrieve:
 
         return q_dict
 
-    def vectorise_docs(self, docs, weighting):
+    def vectorise_docs(self, index, weighting):
         d_dict = {}
+        idf_dict = {}
+
+        for term in index.keys():
+            idf_dict.update({term: self.idf(term)})
+
+        for docs in index.values():
+            for docid in docs.keys():
+                d_dict.update({docid: []})
 
         match weighting:
             case "binary":
-                for term, doclist in docs.items():
-                    for docid in doclist.keys():
-                        d_dict.update({docid: None})
+                for docs in index.values():
+                    for docid in d_dict.keys():
+                        if docid in docs:
+                            d_dict[docid].append(1)
+                        else:
+                            d_dict[docid].append(0)
             case "tf":
-                print(2)
+                for term, docs in index.items():
+                    for docid, count in d_dict.items():
+                        if docid in docs:
+                            d_dict[docid].append(docs[docid])
+                        else:
+                            d_dict[docid].append(0)
             case "tfidf":
-                print(3)
+                for term, docs in index.items():
+                    for docid, count in d_dict.items():
+                        if docid in docs:
+                            d_dict[docid].append(docs[docid])
+                        else:
+                            d_dict[docid].append(0)
+
+                for docid, counts in d_dict.items():
+                    d_dict[docid] = [tf*idf for tf, idf in zip(counts, list(idf_dict.values()))]
 
         return d_dict
 
@@ -119,11 +125,8 @@ class Retrieve:
 
     def for_query(self, query):
         relevant = self.relevant_docs(query)
-        print("Relevant: ", relevant)
         q_vec = self.vectorise_query(query, self.term_weighting)
-        print("QVector: ", q_vec)
         d_vecs = self.vectorise_docs(relevant, self.term_weighting)
-        print("DVectors: ", d_vecs)
         match self.term_weighting:
             case "binary":
                 hits = set()
