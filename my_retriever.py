@@ -36,7 +36,10 @@ class Retrieve:
         return len(self.doc_ids)
 
     def idf(self, word: str) -> float:
-        return log(self.compute_number_of_documents() / len(self.index[word]))
+        if word in self.index:
+            return log(self.compute_number_of_documents() / len(self.index[word]))
+        else:
+            return 0
 
     def relevant_docs(self, query: list[str]) -> dict[str, dict[int, int]]:
         """
@@ -52,7 +55,7 @@ class Retrieve:
 
         return d_dict
 
-    def vectorise_query(self, query: list[str], weighting: str):
+    def vectorise_query(self, query: list[str], weighting: str) -> list[float]:
         q_dict = dict()
 
         match weighting:
@@ -78,9 +81,9 @@ class Retrieve:
                 for term, tf in q_dict.items():
                     q_dict[term] = tf * self.idf(term)
 
-        return q_dict
+        return list(q_dict.values())
 
-    def vectorise_docs(self, index: dict[str, dict[int, int]], weighting: str):
+    def vectorise_docs(self, index: dict[str, dict[int, int]], weighting: str) -> dict[int, list[float]]:
         d_dict = dict()
         idf_dict = dict()
 
@@ -128,30 +131,10 @@ class Retrieve:
         q_vec = self.vectorise_query(query, self.term_weighting)
         d_vecs = self.vectorise_docs(relevant, self.term_weighting)
 
-        # print(q_vec)
-        # print(d_vecs)
-
         matches = dict()
+        for docid, d_vec in d_vecs.items():
+            matches[docid] = cos_sim(q_vec, d_vec)
 
-        return list(range(1, 11))
+        ranked_matches = dict(sorted(matches.items(), key=lambda item: item[1], reverse=True))
 
-
-
-
-
-
-
-        # match self.term_weighting:
-        #     case "binary":
-        #         hits = set()
-        #         for word, doclist in relevant.items():
-        #             hits.update(doclist.keys())
-        #         return list(hits)
-        #     case "tf":
-        #         return list(range(1, 11))
-        #     case "tfidf":
-        #         return list(range(1, 11))
-        #     case _:
-        #         # Due to the command line input validation in IR_engine.py, this case should theoretically never
-        #         # actually run, but is here just in case
-        #         raise Exception("Invalid Weighting - use either 'binary', 'tf' or 'tfidf'")
+        return list(ranked_matches.keys())
