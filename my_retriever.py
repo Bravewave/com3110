@@ -53,7 +53,7 @@ class Retrieve:
         return d_dict
 
     def vectorise_query(self, query, weighting):
-        q_dict = {}
+        q_dict = dict()
 
         match weighting:
             case "binary":
@@ -81,8 +81,8 @@ class Retrieve:
         return q_dict
 
     def vectorise_docs(self, index, weighting):
-        d_dict = {}
-        idf_dict = {}
+        d_dict = dict()
+        idf_dict = dict()
 
         for term in index.keys():
             idf_dict.update({term: self.idf(term)})
@@ -127,17 +127,31 @@ class Retrieve:
         relevant = self.relevant_docs(query)
         q_vec = self.vectorise_query(query, self.term_weighting)
         d_vecs = self.vectorise_docs(relevant, self.term_weighting)
-        match self.term_weighting:
-            case "binary":
-                hits = set()
-                for word, doclist in relevant.items():
-                    hits.update(doclist.keys())
-                return list(hits)
-            case "tf":
-                return list(range(1, 11))
-            case "tfidf":
-                return list(range(1, 11))
-            case _:
-                # Due to the command line input validation in IR_engine.py, this case should theoretically never
-                # actually run, but is here just in case
-                raise Exception("Invalid Weighting - use either 'binary', 'tf' or 'tfidf'")
+
+        # print(q_vec)
+        # print(d_vecs)
+
+        matches = dict()
+
+        return list(range(1, 11))
+
+
+
+
+
+
+
+        # match self.term_weighting:
+        #     case "binary":
+        #         hits = set()
+        #         for word, doclist in relevant.items():
+        #             hits.update(doclist.keys())
+        #         return list(hits)
+        #     case "tf":
+        #         return list(range(1, 11))
+        #     case "tfidf":
+        #         return list(range(1, 11))
+        #     case _:
+        #         # Due to the command line input validation in IR_engine.py, this case should theoretically never
+        #         # actually run, but is here just in case
+        #         raise Exception("Invalid Weighting - use either 'binary', 'tf' or 'tfidf'")
