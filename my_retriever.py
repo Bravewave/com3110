@@ -7,7 +7,7 @@ Kiran Da Costa
 from math import sqrt, log
 
 
-def cos_sim(vq: list | tuple, vd: list | tuple) -> float:
+def cos_sim(vq: list[int | float], vd: list[int | float]) -> float:
     """
     Calcualtes the cosine similarity between a query vector and a document vector.
     For our purposes the query vector will never change and therefore can be omitted from the denominator in the
@@ -55,7 +55,10 @@ class Retrieve:
         :return: a dictionary of terms, each mapped to a dictionary of document IDs and the number of times that term
         occurs within them
         """
+
+        # Initialise document dictionary
         d_dict = dict()
+        # Search the index for each query term and if present, add to the dictionary of relevant documents
         for word in query:
             if word in self.index:
                 d_dict.update({word: self.index[word]})
@@ -69,28 +72,38 @@ class Retrieve:
         :param weighting: either 'binary', 'tf', or 'tfidf'
         :return: the query vector to be used in similarity calculations
         """
+
+        # Initalise query vector
         q_dict = dict()
 
+        # Account for all weighting options
         match weighting:
             case "binary":
                 for term in query:
+                    # Since this is binary, if the term is already in the dictionary, move onto the next iteration
                     if term in q_dict:
                         continue
                     else:
+                        # Otherwise, add it to dictionary with a count of 1
                         q_dict.update({term: 1})
             case "tf":
                 for term in query:
+                    # If the term is already in the query dictionary add 1 to its term count
                     if term in q_dict:
                         q_dict[term] += 1
                     else:
+                        # Otherwise, add it to the dictionary with a count of 1
                         q_dict.update({term: 1})
             case "tfidf":
+                # Code repeated from above to compute term frequency
                 for term in query:
                     if term in q_dict:
                         q_dict[term] += 1
                     else:
                         q_dict.update({term: 1})
 
+                # Multiply every term frequency by the inverse document frequency of the collection, resulting in a
+                # dictionary of terms and their tfidf value
                 for term, tf in q_dict.items():
                     q_dict[term] = tf * self.idf(term)
 
@@ -122,29 +135,37 @@ class Retrieve:
         # Ensure to allow for each weighting system
         match weighting:
             case "binary":
+                # For every relevant document, search for that document in the document vector
+                # No need to iterate through the keys of 'index' as we will not be using the terms themselves
                 for docs in index.values():
                     for docid in d_dict.keys():
+                        # Since this is binary, we simply append 1 if the document is found (i.e. the term is in the
+                        # document) and 0 if it is not
                         if docid in docs:
                             d_dict[docid].append(1)
                         else:
                             d_dict[docid].append(0)
             case "tf":
-                for term, docs in index.items():
-                    for docid, count in d_dict.items():
+                # For TF we append the term count rather than just a 1, but if the term isn't present, we do the same
+                # as above
+                for docs in index.values():
+                    for docid in d_dict.keys():
                         if docid in docs:
-                            d_dict[docid].append(docs[docid])
+                            d_dict[docid].append(docs[docid])  # 'docs[docid]' references the term count
                         else:
                             d_dict[docid].append(0)
             case "tfidf":
-                for term, docs in index.items():
-                    for docid, count in d_dict.items():
+                # Repeat the same as above to compute the term frequency
+                for docs in index.values():
+                    for docid in d_dict.keys():
                         if docid in docs:
                             d_dict[docid].append(docs[docid])
                         else:
                             d_dict[docid].append(0)
 
+                # Multiply every TF value in the vector by the collection IDF using list comprehension
                 for docid, counts in d_dict.items():
-                    d_dict[docid] = [tf*idf for tf, idf in zip(counts, list(idf_dict.values()))]
+                    d_dict[docid] = [tf * idf for tf, idf in zip(counts, list(idf_dict.values()))]
 
         return d_dict
 
@@ -167,6 +188,7 @@ class Retrieve:
             matches[docid] = cos_sim(q_vec, d_vec)
 
         # Rank the matches from most to least relevant
-        ranked_matches = dict(sorted(matches.items(), key=lambda item: item[1], reverse=True))
+        # The 'sorted()' method sorts elements into ascending order by default and therefore must be reversed
+        ranked_matches = dict(sorted(matches.items(), key=lambda match: match[1], reverse=True))
 
         return list(ranked_matches.keys())
